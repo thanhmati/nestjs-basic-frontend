@@ -1,0 +1,950 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "AppController_getHello_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["App"]
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "operationId": "AppController_getConfig_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["App"]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "description": "Trả về danh sách người dùng kèm Avatar và Bio để hiển thị danh bạ hoặc tìm kiếm người nhắn tin. Tự động loại trừ tài khoản đang đăng nhập.",
+        "operationId": "UsersController_findAll_v1",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Từ khóa tìm kiếm theo tên hoặc email của người dùng",
+            "schema": {
+              "example": "Alice",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Số lượng kết quả tối đa cần lấy (Mặc định: 50, Tối đa: 100)",
+            "schema": {
+              "default": 50,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy danh sách thành viên thành công"
+          }
+        },
+        "summary": "Lấy danh sách thành viên trong hệ thống (User Directory)",
+        "tags": ["users"]
+      },
+      "post": {
+        "operationId": "UsersController_createUser_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tạo người dùng thành công"
+          }
+        },
+        "summary": "Tạo người dùng mới (Dành cho Quản trị viên)",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/profile": {
+      "get": {
+        "description": "Truy vấn CSDL lấy đầy đủ thông tin: họ tên, email, vai trò, avatar, bio, location.",
+        "operationId": "UsersController_getProfile_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lấy thông tin hồ sơ tài khoản thành công"
+          }
+        },
+        "summary": "Xem hồ sơ cá nhân đầy đủ của người dùng hiện tại",
+        "tags": ["users"]
+      },
+      "patch": {
+        "description": "Cập nhật họ tên hiển thị, tiểu sử (bio) và địa điểm (location).",
+        "operationId": "UsersController_updateProfile_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật hồ sơ thành công"
+          }
+        },
+        "summary": "Cập nhật thông tin hồ sơ cá nhân",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/avatar": {
+      "post": {
+        "operationId": "UsersController_uploadAvatar_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "File ảnh đại diện (JPG, PNG, WEBP - Tối đa 2MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": ["avatar"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Upload và cập nhật ảnh đại diện cá nhân",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "description": "Bất kỳ ai cũng có thể xem hồ sơ công khai của thành viên khác.",
+        "operationId": "UsersController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy hồ sơ người dùng thành công"
+          },
+          "404": {
+            "description": "Không tìm thấy người dùng"
+          }
+        },
+        "security": [{}],
+        "summary": "Xem hồ sơ công khai của một thành viên theo ID",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/posts": {
+      "post": {
+        "operationId": "PostsController_createPost_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Tạo bài viết mới",
+        "tags": ["Posts"]
+      },
+      "get": {
+        "operationId": "PostsController_findAllOffset_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "take",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Lấy danh sách bài viết (Offset-based Pagination)",
+        "tags": ["Posts"]
+      }
+    },
+    "/api/v1/posts/feed": {
+      "get": {
+        "operationId": "PostsController_findAllCursor_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "take",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Lấy Newsfeed bài viết (Cursor-based Pagination)",
+        "tags": ["Posts"]
+      }
+    },
+    "/api/v1/posts/{id}": {
+      "get": {
+        "operationId": "PostsController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Xem chi tiết bài viết theo ID",
+        "tags": ["Posts"]
+      },
+      "patch": {
+        "operationId": "PostsController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePostDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Chỉnh sửa bài viết",
+        "tags": ["Posts"]
+      },
+      "delete": {
+        "operationId": "PostsController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Xóa bài viết",
+        "tags": ["Posts"]
+      }
+    },
+    "/api/v1/posts/upload-images": {
+      "post": {
+        "operationId": "PostsController_uploadPostImages_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Chọn danh sách ảnh bài viết (Tối đa 5 file, mỗi file \u003C= 5MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": ["images"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Upload danh sách ảnh đính kèm bài viết (Tối đa 5 ảnh)",
+        "tags": ["Posts"]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Tạo tài khoản mới với email, password và name. Không yêu cầu Bearer Token.",
+        "operationId": "AuthController_register_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Đăng ký tài khoản thành công"
+          },
+          "409": {
+            "description": "Email này đã được sử dụng trong hệ thống"
+          }
+        },
+        "security": [{}],
+        "summary": "Đăng ký tài khoản người dùng mới",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Xác thực tài khoản bằng email/mật khẩu và nhận về Access Token có thời hạn.",
+        "operationId": "AuthController_login_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đăng nhập thành công, trả về JWT Access Token"
+          },
+          "401": {
+            "description": "Email hoặc mật khẩu không chính xác"
+          }
+        },
+        "security": [{}],
+        "summary": "Đăng nhập hệ thống & lấy JWT Access Token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/google": {
+      "get": {
+        "description": "Tự động chuyển hướng trình duyệt sang trang đăng nhập của Google.",
+        "operationId": "AuthController_googleAuth_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Kích hoạt luồng đăng nhập bằng Google OAuth2",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/google/callback": {
+      "get": {
+        "description": "Google chuyển hướng về kèm mã code. Hệ thống tạo tài khoản và phát hành Token.",
+        "operationId": "AuthController_googleAuthCallback_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Tiếp nhận mã ủy quyền callback từ Google",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/posts/{postId}/comments": {
+      "post": {
+        "operationId": "CommentsController_createComment_v1",
+        "parameters": [
+          {
+            "name": "postId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Thêm bình luận mới dưới bài viết",
+        "tags": ["comments"]
+      },
+      "get": {
+        "operationId": "CommentsController_findCommentsByPost_v1",
+        "parameters": [
+          {
+            "name": "postId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Lấy danh sách bình luận của bài viết (Cursor Pagination)",
+        "tags": ["comments"]
+      }
+    },
+    "/api/v1/comments/{id}": {
+      "get": {
+        "operationId": "CommentsController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [{}],
+        "summary": "Xem chi tiết một bình luận theo ID",
+        "tags": ["comments"]
+      },
+      "patch": {
+        "operationId": "CommentsController_updateComment_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Chỉnh sửa nội dung bình luận",
+        "tags": ["comments"]
+      },
+      "delete": {
+        "operationId": "CommentsController_removeComment_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Xóa bình luận",
+        "tags": ["comments"]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_getUserNotifications_v1",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "isRead",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Lấy danh sách thông báo của người dùng đang đăng nhập",
+        "tags": ["notifications"]
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "patch": {
+        "operationId": "NotificationsController_markAllAsRead_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Đánh dấu tất cả thông báo là đã đọc",
+        "tags": ["notifications"]
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "patch": {
+        "operationId": "NotificationsController_markAsRead_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Đánh dấu một thông báo cụ thể là đã đọc",
+        "tags": ["notifications"]
+      }
+    },
+    "/api/v1/chat/conversations": {
+      "get": {
+        "description": "Trả về danh sách đối tác chat, tin nhắn gần nhất, thời gian và số lượng tin nhắn chưa đọc.",
+        "operationId": "ChatController_getConversations_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lấy danh sách cuộc trò chuyện thành công"
+          }
+        },
+        "summary": "Lấy danh sách các cuộc trò chuyện gần đây của người dùng hiện tại",
+        "tags": ["chat"]
+      }
+    },
+    "/api/v1/chat/messages/{receiverId}": {
+      "get": {
+        "description": "REST API tải lịch sử tin nhắn ban đầu để render giao diện trước khi kết nối realtime Socket.IO.",
+        "operationId": "ChatController_getMessages_v1",
+        "parameters": [
+          {
+            "name": "receiverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy lịch sử tin nhắn thành công"
+          }
+        },
+        "summary": "Lấy lịch sử tin nhắn trực tiếp giữa người dùng hiện tại và một người nhận",
+        "tags": ["chat"]
+      }
+    },
+    "/api/v1/chat/messages/{senderId}/read": {
+      "patch": {
+        "operationId": "ChatController_markAsRead_v1",
+        "parameters": [
+          {
+            "name": "senderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Đánh dấu tin nhắn đã đọc thành công"
+          }
+        },
+        "summary": "Đánh dấu đã đọc toàn bộ tin nhắn từ một người gửi cụ thể",
+        "tags": ["chat"]
+      }
+    }
+  },
+  "info": {
+    "title": "Social Chat App API",
+    "description": "Hệ thống REST API cho ứng dụng Mạng xã hội & Chat Realtime — Xây dựng với NestJS, PostgreSQL & Prisma ORM",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "JWT",
+        "description": "Nhập JWT Access Token của bạn vào đây",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Nguyễn Văn A",
+            "description": "Họ và tên hiển thị của người dùng"
+          },
+          "bio": {
+            "type": "string",
+            "example": "Lập trình viên Full-Stack đam mê NestJS và React",
+            "description": "Tiểu sử cá nhân (Bio)"
+          },
+          "location": {
+            "type": "string",
+            "example": "Hà Nội, Việt Nam",
+            "description": "Nơi sinh sống hoặc địa điểm làm việc"
+          }
+        }
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Họ và tên người dùng",
+            "example": "Alice Nguyen"
+          },
+          "email": {
+            "type": "string",
+            "description": "Địa chỉ email người dùng",
+            "example": "alice@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu người dùng (tối thiểu 6 ký tự)",
+            "example": "Password@123",
+            "minLength": 6
+          }
+        },
+        "required": ["name", "email", "password"]
+      },
+      "CreatePostDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["title", "content"]
+      },
+      "UpdatePostDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Địa chỉ email người dùng (duy nhất trong hệ thống)",
+            "example": "alice@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu đăng nhập (tối thiểu 6 ký tự)",
+            "example": "Password@123",
+            "minLength": 6
+          },
+          "name": {
+            "type": "string",
+            "description": "Họ và tên hiển thị của người dùng",
+            "example": "Alice Nguyen"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Địa chỉ email đã đăng ký tài khoản",
+            "example": "alice@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu bảo mật",
+            "example": "Password@123",
+            "minLength": 6
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": ["content"]
+      },
+      "UpdateCommentDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "JWT-auth": []
+    }
+  ]
+}
