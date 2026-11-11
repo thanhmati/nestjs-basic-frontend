@@ -1,5 +1,5 @@
-import { apiClient } from '../services/api';
-import type { Comment } from '../types';
+import { apiClient } from "../services/api";
+import type { Comment } from "../types";
 
 export interface CommentListResponse {
   items: Comment[];
@@ -17,19 +17,21 @@ export const commentsApi = {
     limit: number = 10,
   ): Promise<CommentListResponse | Comment[]> => {
     const params = new URLSearchParams();
-    if (cursor) params.append('cursor', cursor.toString());
-    params.append('limit', limit.toString());
+    if (cursor) params.append("cursor", cursor.toString());
+    params.append("take", limit.toString());
 
-    return apiClient.get(`/posts/${postId}/comments?${params.toString()}`) as unknown as Promise<
-      CommentListResponse | Comment[]
-    >;
+    return apiClient.get(
+      `/posts/${postId}/comments?${params.toString()}`,
+    ) as unknown as Promise<CommentListResponse | Comment[]>;
   },
 
   /**
    * Thêm bình luận mới dưới bài viết
    */
   createComment: async (postId: number, content: string): Promise<Comment> => {
-    return apiClient.post(`/posts/${postId}/comments`, { content }) as unknown as Promise<Comment>;
+    return apiClient.post(`/posts/${postId}/comments`, {
+      content,
+    }) as unknown as Promise<Comment>;
   },
 
   /**

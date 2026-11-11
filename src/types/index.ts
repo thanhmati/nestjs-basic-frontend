@@ -1,4 +1,4 @@
-export * from './api.generated';
+export * from "./api.generated";
 
 // Standard Backend Envelope
 export interface ApiResponse<T = unknown> {
@@ -17,7 +17,7 @@ export interface ApiErrorResponse {
 }
 
 // User & Profile
-export type UserRole = 'USER' | 'ADMIN';
+export type UserRole = "USER" | "ADMIN";
 
 export interface UserProfile {
   id?: number;
@@ -139,6 +139,7 @@ export interface Conversation {
       avatarUrl?: string | null;
     } | null;
   };
+  roomId?: string;
   lastMessage: {
     id: number;
     content: string;
@@ -187,10 +188,9 @@ export interface NotificationItem {
 export interface NotificationsResponse {
   items: NotificationItem[];
   meta: {
-    limit: number;
+    take: number;
     nextCursor?: number | null;
     hasNextPage: boolean;
     unreadCount: number;
   };
 }
-

@@ -11,6 +11,11 @@ export interface ChatPartner {
   avatarUrl?: string | null;
 }
 
+export const getConversationRoomId = (user1Id: number, user2Id: number): string => {
+  const sortedIds = [user1Id, user2Id].sort((a, b) => a - b);
+  return `conversation:${sortedIds[0]}_${sortedIds[1]}`;
+};
+
 interface ChatState {
   conversations: Conversation[];
   activePartner: ChatPartner | null;
@@ -53,6 +58,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: list,
         unreadTotal: totalUnread,
       });
+
+      // Tự động tham gia tất cả các phòng hội thoại để nhận tin nhắn real-time
+      const socket = getChatSocket();
+      if (socket && socket.connected) {
+        list.forEach((c) => {
+          if (c.roomId) {
+            socket.emit('join_room', { roomId: c.roomId });
+          }
+        });
+      }
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
     } finally {
@@ -63,7 +78,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setActivePartner: async (partner: ChatPartner | null) => {
     const socket = getChatSocket();
     const prevRoom = get().activeRoomId;
-    if (prevRoom && socket) {
+    if (prevRoom && socket && socket.connected) {
       socket.emit('leave_room', { roomId: prevRoom });
     }
 
@@ -74,6 +89,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     if (partner) {
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId && socket && socket.connected) {
+        const convRoomId = getConversationRoomId(currentUserId, partner.id);
+        socket.emit('join_room', { roomId: convRoomId });
+      }
+
       await get().fetchMessages(partner.id);
       await get().markConversationRead(partner.id);
     }
@@ -122,22 +143,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     const { activePartner, activeRoomId } = get();
+    const currentUserId = useAuthStore.getState().user?.id || 0;
 
     if (activePartner) {
-      // 1-1 Chat: gửi receiverId và content
-      socket.emit('send_room_message', {
-        receiverId: activePartner.id,
-        content: trimmed,
-      });
+      const convRoomId = getConversationRoomId(currentUserId, activePartner.id);
+
+      // Đảm bảo client đã tham gia phòng hội thoại 1-1 này
+      socket.emit('join_room', { roomId: convRoomId });
+
+      // 1-1 Chat: gửi receiverId, roomId và content
+      socket.emit(
+        'send_room_message',
+        {
+          receiverId: activePartner.id,
+          roomId: convRoomId,
+          content: trimmed,
+        },
+        (response: { status?: string; message?: ChatMessage }) => {
+          if (response?.status === 'sent' && response?.message) {
+            get().addMessage(response.message, currentUserId);
+          }
+        },
+      );
       return true;
     }
 
     if (activeRoomId) {
       // Room Chat: gửi roomId và content
-      socket.emit('send_room_message', {
-        roomId: activeRoomId,
-        content: trimmed,
-      });
+      socket.emit(
+        'send_room_message',
+        {
+          roomId: activeRoomId,
+          content: trimmed,
+        },
+        (response: { status?: string; message?: ChatMessage }) => {
+          if (response?.status === 'sent' && response?.message) {
+            get().addMessage(response.message, currentUserId);
+          }
+        },
+      );
       return true;
     }
 
@@ -297,9 +341,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
     // Gỡ các listener cũ trước để tránh duplicate khi re-mount
     socket.off('new_room_message');
 
+    const joinAllActiveRooms = () => {
+      const { activePartner, activeRoomId, conversations } = get();
+      const currentId = currentUserId || useAuthStore.getState().user?.id;
+      if (activePartner && currentId) {
+        socket.emit('join_room', { roomId: getConversationRoomId(currentId, activePartner.id) });
+      }
+      if (activeRoomId) {
+        socket.emit('join_room', { roomId: activeRoomId });
+      }
+      conversations.forEach((c) => {
+        if (c.roomId) {
+          socket.emit('join_room', { roomId: c.roomId });
+        }
+      });
+    };
+
     const handleConnect = () => {
       set({ isWsConnected: true });
       socket.emit('subscribe_notifications');
+      joinAllActiveRooms();
     };
 
     const handleDisconnect = () => {
@@ -315,7 +376,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     socket.on('disconnect', handleDisconnect);
     socket.on('new_room_message', handleNewMessage);
 
-    set({ isWsConnected: socket.connected });
+    if (socket.connected) {
+      set({ isWsConnected: true });
+      joinAllActiveRooms();
+    }
 
     return () => {
       socket.off('connect', handleConnect);

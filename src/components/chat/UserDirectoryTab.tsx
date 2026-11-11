@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Search, MessageSquarePlus, Users, MapPin } from 'lucide-react';
 import type { User } from '../../types';
 import { usersApi } from '../../api/users.api';
+import { getChatSocket } from '../../services/socket';
+import { getConversationRoomId } from '../../stores/chat.store';
+import { useAuthStore } from '../../stores/auth.store';
 import Avatar from '../common/Avatar';
 import Button from '../common/Button';
 
@@ -21,7 +24,19 @@ export const UserDirectoryTab: React.FC<UserDirectoryTabProps> = ({ onSelectUser
         setIsLoading(true);
         const data = await usersApi.getUsers(searchTerm, 50);
         if (!ignore) {
-          setUsers(Array.isArray(data) ? data : []);
+          const list = Array.isArray(data) ? data : [];
+          setUsers(list);
+
+          // Tự động tham gia các phòng hội thoại tiềm năng với người dùng trong danh bạ
+          const socket = getChatSocket();
+          const currentUserId = useAuthStore.getState().user?.id;
+          if (socket && socket.connected && currentUserId) {
+            list.forEach((u) => {
+              if (u.id) {
+                socket.emit('join_room', { roomId: getConversationRoomId(currentUserId, u.id) });
+              }
+            });
+          }
         }
       } catch (err) {
         console.error('Failed to search users:', err);
