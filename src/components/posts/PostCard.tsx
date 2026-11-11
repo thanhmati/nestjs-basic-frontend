@@ -35,10 +35,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const authorId = post.author?.id ?? post.authorId;
+
   // Quyền xóa: Tác giả bài viết hoặc Quản trị viên (ADMIN)
   const canDelete =
     Boolean(user) &&
-    (user?.id === post.authorId || user?.role === 'ADMIN');
+    (user?.id === authorId || user?.role === 'ADMIN');
 
   const handleDelete = async () => {
     try {
@@ -75,7 +77,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
       {/* Header: Author & Options */}
       <div className="flex items-start justify-between gap-3 mb-3.5">
         <div className="flex items-center gap-3">
-          <Link to={`/users/${post.authorId}`}>
+          <Link to={authorId ? `/users/${authorId}` : '#'}>
             <Avatar
               src={post.author.profile?.avatarUrl}
               alt={post.author.name}
@@ -85,7 +87,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
           <div>
             <div className="flex items-center gap-2">
               <Link
-                to={`/users/${post.authorId}`}
+                to={authorId ? `/users/${authorId}` : '#'}
                 className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors truncate"
               >
                 {post.author.name}
@@ -192,7 +194,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
       {showComments && (
         <CommentSection
           postId={post.id}
-          postAuthorId={post.authorId}
+          postAuthorId={authorId ?? 0}
           onCommentCountChange={(delta) =>
             setCommentCount((prev) => Math.max(0, prev + delta))
           }

@@ -74,9 +74,9 @@ export interface Post {
   title: string;
   content: string;
   published: boolean;
-  authorId: number;
+  authorId?: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   author: {
     id: number;
     name: string;

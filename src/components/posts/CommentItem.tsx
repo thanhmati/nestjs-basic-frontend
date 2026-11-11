@@ -22,10 +22,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const commentAuthorId = comment.author?.id ?? comment.authorId;
+
   // Quyền xóa: chính tác giả bình luận, chủ bài viết, hoặc ADMIN
   const canDelete =
     Boolean(user) &&
-    (user?.id === comment.authorId ||
+    (user?.id === commentAuthorId ||
       user?.id === postAuthorId ||
       user?.role === 'ADMIN');
 
